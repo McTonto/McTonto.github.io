@@ -72,7 +72,7 @@ class SentencesAnimation {
             if (sentence.y < 0) sentence.y = this.canvas.height;
 
             // Draw sentence with higher opacity
-            this.ctx.font = `${sentence.size * (1 + volume)}px Arial`;
+            this.ctx.font = `${sentence.size * (1 + volume)}px 'Bebas Neue'`;
             this.ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + volume * 0.4})`; // Increased base opacity
             this.ctx.textAlign = 'center';
             this.ctx.fillText(sentence.text, sentence.x, sentence.y);
