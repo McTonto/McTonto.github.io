@@ -48,6 +48,14 @@ class AudioHandler {
             }
             this.volume = sum / this.dataArray.length / 255;
 
+            // Update volume meter
+            const volumeMeter = document.getElementById('volume-meter');
+            const volumeValue = document.getElementById('volume-value');
+            if (volumeMeter && volumeValue) {
+                volumeMeter.style.width = `${this.volume * 100}%`;
+                volumeValue.textContent = `Volume: ${Math.round(this.volume * 100)}`;
+            }
+
             // Detect peaks for BPM
             const currentTime = Date.now();
             if (this.volume > this.threshold) {
@@ -66,9 +74,15 @@ class AudioHandler {
                         // Clamp BPM to reasonable range
                         this.bpm = Math.min(Math.max(this.bpm, 60), 200);
                         
-                        // Update DOM if you want to display the BPM
-                        const volumeValue = document.getElementById('volume-value');
-                        volumeValue.textContent = `Volume: ${Math.round(this.volume * 100)} | BPM: ${this.bpm}`;
+                        // Update BPM meter
+                        const bpmMeter = document.getElementById('bpm-meter');
+                        const bpmValue = document.getElementById('bpm-value');
+                        if (bpmMeter && bpmValue) {
+                            // Scale BPM to meter width (60-200 BPM range)
+                            const bpmPercentage = ((this.bpm - 60) / (200 - 60)) * 100;
+                            bpmMeter.style.width = `${bpmPercentage}%`;
+                            bpmValue.textContent = `BPM: ${this.bpm}`;
+                        }
                     }
                 }
             }

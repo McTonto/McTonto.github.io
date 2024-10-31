@@ -87,6 +87,27 @@
             margin-top: 5px;
             color: #fff;
         }
+
+        #bpm-meter-container {
+            margin: 10px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #bpm-meter {
+            height: 10px;
+            width: 0%;
+            background: linear-gradient(to right, #3498db, #9b59b6);
+            border-radius: 2px;
+            transition: width 0.1s ease-out;
+        }
+
+        #bpm-value {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +126,10 @@
         <div id="volume-meter-container">
             <div id="volume-meter"></div>
             <div id="volume-value">Volume: 0</div>
+        </div>
+        <div id="bpm-meter-container">
+            <div id="bpm-meter"></div>
+            <div id="bpm-value">BPM: 0</div>
         </div>
         <div id="layer-toggles">
             <label>
