@@ -9,11 +9,12 @@ class AudioHandler {
         // BPM detection properties
         this.bpm = 0;
         this.peaks = [];
-        this.threshold = 0.15;
-        this.minPeakDistance = 200;
+        this.threshold = 0.1;
+        this.minPeakDistance = 150;
         this.lastPeakTime = 0;
         this.peakHistory = [];
-        this.maxPeakHistory = 8;
+        this.maxPeakHistory = 6;
+        this.lastVolume = 0;
     }
 
     async initialize() {
@@ -41,16 +42,23 @@ class AudioHandler {
         const detectBeats = () => {
             this.analyser.getByteFrequencyData(this.dataArray);
             
-            // Calculate current volume with bass emphasis
+            // Calculate current volume with enhanced bass emphasis
             let sum = 0;
             let bassSum = 0;
             for (let i = 0; i < this.dataArray.length; i++) {
-                if (i < 10) { // Bass frequencies
-                    bassSum += this.dataArray[i] * 2; // Give more weight to bass
+                if (i < 20) { // Extended bass range
+                    bassSum += this.dataArray[i] * 3; // Increased bass weight
                 }
                 sum += this.dataArray[i];
             }
-            this.volume = (sum / this.dataArray.length + bassSum) / (255 * 3);
+            const currentVolume = (sum / this.dataArray.length + bassSum) / (255 * 4);
+            
+            // Detect peaks using volume derivative
+            const volumeDerivative = currentVolume - this.lastVolume;
+            this.lastVolume = currentVolume;
+            
+            // Smooth volume for display
+            this.volume = this.volume * 0.9 + currentVolume * 0.1;
 
             // Update volume meter
             const volumeMeter = document.getElementById('volume-meter');
@@ -60,36 +68,41 @@ class AudioHandler {
                 volumeValue.textContent = `Volume: ${Math.round(this.volume * 100)}`;
             }
 
-            // Detect peaks for BPM
+            // Detect peaks for BPM using volume derivative
             const currentTime = Date.now();
-            if (this.volume > this.threshold) {
-                if (currentTime - this.lastPeakTime >= this.minPeakDistance) {
-                    this.peakHistory.push(currentTime - this.lastPeakTime);
-                    if (this.peakHistory.length > this.maxPeakHistory) {
-                        this.peakHistory.shift();
-                    }
-                    this.lastPeakTime = currentTime;
+            if (volumeDerivative > this.threshold && currentTime - this.lastPeakTime >= this.minPeakDistance) {
+                this.peakHistory.push(currentTime - this.lastPeakTime);
+                if (this.peakHistory.length > this.maxPeakHistory) {
+                    this.peakHistory.shift();
+                }
+                this.lastPeakTime = currentTime;
+                
+                // Calculate BPM with weighted average
+                if (this.peakHistory.length >= 2) {
+                    // Give more weight to recent intervals
+                    let weightedSum = 0;
+                    let weightSum = 0;
+                    this.peakHistory.forEach((interval, index) => {
+                        const weight = index + 1;
+                        weightedSum += interval * weight;
+                        weightSum += weight;
+                    });
+                    const averageInterval = weightedSum / weightSum;
+                    const newBPM = Math.round(60000 / averageInterval);
                     
-                    // Calculate BPM
-                    if (this.peakHistory.length >= 2) {
-                        const averageInterval = this.peakHistory.reduce((a, b) => a + b, 0) / this.peakHistory.length;
-                        this.bpm = Math.round(60000 / averageInterval); // Convert ms to BPM
-                        
-                        // Clamp BPM to reasonable range
-                        this.bpm = Math.min(Math.max(this.bpm, 60), 200);
-                        
-                        // Update BPM meter with smoother transition
-                        const bpmMeter = document.getElementById('bpm-meter');
-                        const bpmValue = document.getElementById('bpm-value');
-                        if (bpmMeter && bpmValue) {
-                            // Scale BPM to meter width (60-200 BPM range)
-                            const bpmPercentage = ((this.bpm - 60) / (200 - 60)) * 100;
-                            bpmMeter.style.width = `${bpmPercentage}%`;
-                            bpmValue.textContent = `BPM: ${this.bpm}`;
-                            
-                            // Debug output
-                            console.log('Peak detected! BPM:', this.bpm);
-                        }
+                    // Smooth BPM changes
+                    this.bpm = this.bpm ? Math.round(this.bpm * 0.7 + newBPM * 0.3) : newBPM;
+                    
+                    // Clamp BPM to reasonable range
+                    this.bpm = Math.min(Math.max(this.bpm, 60), 200);
+                    
+                    // Update BPM meter
+                    const bpmMeter = document.getElementById('bpm-meter');
+                    const bpmValue = document.getElementById('bpm-value');
+                    if (bpmMeter && bpmValue) {
+                        const bpmPercentage = ((this.bpm - 60) / (200 - 60)) * 100;
+                        bpmMeter.style.width = `${bpmPercentage}%`;
+                        bpmValue.textContent = `BPM: ${this.bpm}`;
                     }
                 }
             }
