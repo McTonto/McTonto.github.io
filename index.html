@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #visualizer-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #letters-layer {
+            z-index: 1;
+        }
+
+        #words-layer {
+            z-index: 2;
+        }
+
+        #sentences-layer {
+            z-index: 3;
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            z-index: 4;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #text-source {
+            display: none;
+        }
+
+        h1.title {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            z-index: 4;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #volume-meter-container {
+            margin: 10px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #volume-meter {
+            height: 10px;
+            width: 0%;
+            background: linear-gradient(to right, #2ecc71, #e74c3c);
+            border-radius: 2px;
+            transition: width 0.1s ease-out;
+        }
+
+        #volume-value {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">SnowflakeVFX</h1>
+
+    <div id="text-source" data-file="data/lyrics.txt"></div>
+
+    <div id="visualizer-container">
+        <canvas id="letters-layer"></canvas>
+        <canvas id="words-layer"></canvas>
+        <canvas id="sentences-layer"></canvas>
+    </div>
+
+    <div id="controls">
+        <button id="start-audio">Start Audio</button>
+        <div id="volume-meter-container">
+            <div id="volume-meter"></div>
+            <div id="volume-value">Volume: 0</div>
+        </div>
+        <div id="layer-toggles">
+            <label>
+                <input type="checkbox" id="toggle-letters" checked>
+                Letters Layer
+            </label>
+            <br>
+            <label>
+                <input type="checkbox" id="toggle-words" checked>
+                Words Layer
+            </label>
+            <br>
+            <label>
+                <input type="checkbox" id="toggle-sentences" checked>
+                Sentences Layer
+            </label>
+        </div>
+    </div>
+
+    <!-- Move all script tags to just before the closing body tag and ensure correct order -->
+    <!-- First load the classes -->
+    <script src="js/audio-handler.js"></script>
+    <script src="js/letters.js"></script>
+    <script src="js/words.js"></script>
+    <script src="js/sentences.js"></script>
+    
+    <!-- Then the initialization script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize canvas sizes
+            function resizeCanvases() {
+                const canvases = document.querySelectorAll('canvas');
+                canvases.forEach(canvas => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                });
+            }
+
+            // Initial resize and add event listener
+            resizeCanvases();
+            window.addEventListener('resize', resizeCanvases);
+
+            let lettersAnimation;
+            let wordsAnimation;
+            let sentencesAnimation;
+            let sharedAudioHandler;
+
+            // Update start audio button
+            document.getElementById('start-audio').addEventListener('click', async () => {
+                try {
+                    // Initialize shared audio handler first
+                    sharedAudioHandler = new AudioHandler();
+                    await sharedAudioHandler.initialize();
+
+                    // Initialize all animations with shared audio handler
+                    if (!lettersAnimation) {
+                        lettersAnimation = new LettersAnimation(sharedAudioHandler);
+                        await lettersAnimation.initialize();
+                    }
+                    
+                    if (!wordsAnimation) {
+                        wordsAnimation = new WordsAnimation(sharedAudioHandler);
+                        await wordsAnimation.initialize();
+                    }
+
+                    if (!sentencesAnimation) {
+                        sentencesAnimation = new SentencesAnimation(sharedAudioHandler);
+                        await sentencesAnimation.initialize();
+                    }
+                    
+                    // Update button text
+                    document.getElementById('start-audio').textContent = 'Audio Active';
+                    document.getElementById('start-audio').disabled = true;
+                    
+                    // Set up toggle handlers
+                    document.getElementById('toggle-letters').addEventListener('change', (e) => {
+                        const canvas = document.getElementById('letters-layer');
+                        canvas.classList.toggle('hidden', !e.target.checked);
+                        if (e.target.checked) {
+                            lettersAnimation.startAnimation();
+                        } else {
+                            lettersAnimation.stopAnimation();
+                        }
+                    });
+
+                    document.getElementById('toggle-words').addEventListener('change', (e) => {
+                        const canvas = document.getElementById('words-layer');
+                        canvas.classList.toggle('hidden', !e.target.checked);
+                        if (e.target.checked) {
+                            wordsAnimation.startAnimation();
+                        } else {
+                            wordsAnimation.stopAnimation();
+                        }
+                    });
+
+                    // Add sentences toggle handler
+                    document.getElementById('toggle-sentences').addEventListener('change', (e) => {
+                        const canvas = document.getElementById('sentences-layer');
+                        canvas.classList.toggle('hidden', !e.target.checked);
+                        if (e.target.checked) {
+                            sentencesAnimation.startAnimation();
+                        } else {
+                            sentencesAnimation.stopAnimation();
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error starting audio:', error);
+                    document.getElementById('start-audio').textContent = 'Audio Failed';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
