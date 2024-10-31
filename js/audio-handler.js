@@ -9,11 +9,11 @@ class AudioHandler {
         // BPM detection properties
         this.bpm = 0;
         this.peaks = [];
-        this.threshold = 0.25;
-        this.minPeakDistance = 250; // Minimum ms between peaks
+        this.threshold = 0.15;
+        this.minPeakDistance = 200;
         this.lastPeakTime = 0;
         this.peakHistory = [];
-        this.maxPeakHistory = 10; // Number of peaks to average
+        this.maxPeakHistory = 8;
     }
 
     async initialize() {
@@ -41,12 +41,16 @@ class AudioHandler {
         const detectBeats = () => {
             this.analyser.getByteFrequencyData(this.dataArray);
             
-            // Calculate current volume
+            // Calculate current volume with bass emphasis
             let sum = 0;
+            let bassSum = 0;
             for (let i = 0; i < this.dataArray.length; i++) {
+                if (i < 10) { // Bass frequencies
+                    bassSum += this.dataArray[i] * 2; // Give more weight to bass
+                }
                 sum += this.dataArray[i];
             }
-            this.volume = sum / this.dataArray.length / 255;
+            this.volume = (sum / this.dataArray.length + bassSum) / (255 * 3);
 
             // Update volume meter
             const volumeMeter = document.getElementById('volume-meter');
@@ -74,7 +78,7 @@ class AudioHandler {
                         // Clamp BPM to reasonable range
                         this.bpm = Math.min(Math.max(this.bpm, 60), 200);
                         
-                        // Update BPM meter
+                        // Update BPM meter with smoother transition
                         const bpmMeter = document.getElementById('bpm-meter');
                         const bpmValue = document.getElementById('bpm-value');
                         if (bpmMeter && bpmValue) {
@@ -82,6 +86,9 @@ class AudioHandler {
                             const bpmPercentage = ((this.bpm - 60) / (200 - 60)) * 100;
                             bpmMeter.style.width = `${bpmPercentage}%`;
                             bpmValue.textContent = `BPM: ${this.bpm}`;
+                            
+                            // Debug output
+                            console.log('Peak detected! BPM:', this.bpm);
                         }
                     }
                 }
