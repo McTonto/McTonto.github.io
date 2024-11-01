@@ -21,12 +21,12 @@ class SentencesAnimation {
             
             this.sentences = matches.map(match => {
                 const sentence = {
-                    text: match.slice(1, -1), // Remove [ and ]
+                    text: match.slice(1, -1),
                     x: Math.random() * this.canvas.width,
                     y: Math.random() * this.canvas.height,
-                    speed: 0.3 + Math.random() * 0.7,
+                    speed: 0.1 + Math.random() * 0.2,
                     angle: Math.random() * Math.PI * 2,
-                    size: 30 // Made size larger and fixed
+                    size: 30
                 };
                 console.log('Created sentence object:', sentence); // Debug log
                 return sentence;
@@ -62,8 +62,8 @@ class SentencesAnimation {
         // Update and draw sentences
         this.sentences.forEach(sentence => {
             // Update position
-            sentence.x += Math.cos(sentence.angle) * sentence.speed * (volume * 0.5 + 0.1);
-            sentence.y += Math.sin(sentence.angle) * sentence.speed * (volume * 0.5 + 0.1);
+            sentence.x += Math.cos(sentence.angle) * sentence.speed * (volume * 0.3 + 0.05);
+            sentence.y += Math.sin(sentence.angle) * sentence.speed * (volume * 0.3 + 0.05);
 
             // Wrap around screen
             if (sentence.x > this.canvas.width) sentence.x = 0;
@@ -71,9 +71,9 @@ class SentencesAnimation {
             if (sentence.y > this.canvas.height) sentence.y = 0;
             if (sentence.y < 0) sentence.y = this.canvas.height;
 
-            // Draw sentence with higher opacity
-            this.ctx.font = `${sentence.size * (1 + volume)}px 'Bebas Neue'`;
-            this.ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + volume * 0.4})`; // Increased base opacity
+            // Draw sentence with higher opacity but less volume influence
+            this.ctx.font = `${sentence.size * (1 + volume * 0.5)}px 'Bebas Neue'`;
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + volume * 0.3})`;
             this.ctx.textAlign = 'center';
             this.ctx.fillText(sentence.text, sentence.x, sentence.y);
         });

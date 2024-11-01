@@ -6,15 +6,16 @@ class AudioHandler {
         this.dataArray = null;
         this.volume = 0;
         
-        // BPM detection properties
+        // Adjusted BPM detection properties
         this.bpm = 0;
         this.peaks = [];
-        this.threshold = 0.25;
+        this.threshold = 0.3;
         this.minPeakDistance = 300;
         this.lastPeakTime = 0;
         this.peakHistory = [];
         this.maxPeakHistory = 8;
         this.lastVolume = 0;
+        this.volumeSmoothing = 0.95;
     }
 
     async initialize() {
@@ -42,23 +43,23 @@ class AudioHandler {
         const detectBeats = () => {
             this.analyser.getByteFrequencyData(this.dataArray);
             
-            // Calculate current volume with enhanced bass emphasis
+            // Calculate current volume with reduced sensitivity
             let sum = 0;
             let bassSum = 0;
             for (let i = 0; i < this.dataArray.length; i++) {
-                if (i < 20) { // Extended bass range
-                    bassSum += this.dataArray[i] * 3; // Increased bass weight
+                if (i < 20) {
+                    bassSum += this.dataArray[i] * 1.5; // Reduced bass weight
                 }
                 sum += this.dataArray[i];
             }
-            const currentVolume = (sum / this.dataArray.length + bassSum) / (255 * 4);
+            const currentVolume = (sum / this.dataArray.length + bassSum) / (255 * 6); // Increased divisor for lower volume
             
             // Detect peaks using volume derivative
             const volumeDerivative = currentVolume - this.lastVolume;
             this.lastVolume = currentVolume;
             
-            // Smooth volume for display
-            this.volume = this.volume * 0.9 + currentVolume * 0.1;
+            // More aggressive volume smoothing
+            this.volume = this.volume * this.volumeSmoothing + currentVolume * (1 - this.volumeSmoothing);
 
             // Update volume meter
             const volumeMeter = document.getElementById('volume-meter');
