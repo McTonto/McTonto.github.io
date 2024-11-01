@@ -9,11 +9,11 @@ class AudioHandler {
         // BPM detection properties
         this.bpm = 0;
         this.peaks = [];
-        this.threshold = 0.1;
-        this.minPeakDistance = 150;
+        this.threshold = 0.25;
+        this.minPeakDistance = 300;
         this.lastPeakTime = 0;
         this.peakHistory = [];
-        this.maxPeakHistory = 6;
+        this.maxPeakHistory = 8;
         this.lastVolume = 0;
     }
 
@@ -90,18 +90,18 @@ class AudioHandler {
                     const averageInterval = weightedSum / weightSum;
                     const newBPM = Math.round(60000 / averageInterval);
                     
-                    // Smooth BPM changes
-                    this.bpm = this.bpm ? Math.round(this.bpm * 0.7 + newBPM * 0.3) : newBPM;
+                    // More aggressive smoothing
+                    this.bpm = this.bpm ? Math.round(this.bpm * 0.8 + newBPM * 0.2) : newBPM;
                     
-                    // Clamp BPM to reasonable range
-                    this.bpm = Math.min(Math.max(this.bpm, 60), 200);
+                    // More restrictive BPM range
+                    this.bpm = Math.min(Math.max(this.bpm, 60), 180);
                     
                     // Update BPM meter
                     const bpmMeter = document.getElementById('bpm-meter');
                     const bpmValue = document.getElementById('bpm-value');
                     if (bpmMeter && bpmValue) {
-                        const bpmPercentage = ((this.bpm - 60) / (200 - 60)) * 100;
-                        bpmMeter.style.width = `${bpmPercentage}%`;
+                        const bpmPercentage = ((this.bpm - 60) / (120)) * 100;
+                        bpmMeter.style.width = `${Math.min(bpmPercentage, 100)}%`;
                         bpmValue.textContent = `BPM: ${this.bpm}`;
                     }
                 }

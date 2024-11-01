@@ -24,7 +24,7 @@ class SentencesAnimation {
                     text: match.slice(1, -1), // Remove [ and ]
                     x: Math.random() * this.canvas.width,
                     y: Math.random() * this.canvas.height,
-                    speed: 1 + Math.random() * 2,
+                    speed: 0.3 + Math.random() * 0.7,
                     angle: Math.random() * Math.PI * 2,
                     size: 30 // Made size larger and fixed
                 };
@@ -62,8 +62,8 @@ class SentencesAnimation {
         // Update and draw sentences
         this.sentences.forEach(sentence => {
             // Update position
-            sentence.x += Math.cos(sentence.angle) * sentence.speed * (volume + 0.1);
-            sentence.y += Math.sin(sentence.angle) * sentence.speed * (volume + 0.1);
+            sentence.x += Math.cos(sentence.angle) * sentence.speed * (volume * 0.5 + 0.1);
+            sentence.y += Math.sin(sentence.angle) * sentence.speed * (volume * 0.5 + 0.1);
 
             // Wrap around screen
             if (sentence.x > this.canvas.width) sentence.x = 0;
