@@ -127,7 +127,7 @@
 </head>
 <body>
     <h1 class="title">SnowflakeVFX</h1>
-    <div class="file-info">File Last Modified: <span id="file-time"></span></div>
+    <div class="file-info">Build Time: <span id="file-time">2024-03-19 15:30:00</span></div>
 
     <div id="text-source" data-file="data/lyrics.txt"></div>
 
@@ -257,16 +257,27 @@
                 }
             });
 
-            // Get the file's last modification time
-            fetch('php/get_timestamp.php')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('file-time').textContent = data.lastModified;
-                })
-                .catch(error => {
+            // Update the timestamp fetch
+            async function updateTimestamp() {
+                try {
+                    const response = await fetch('php/get_timestamp.php');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('file-time').textContent = data.lastModified;
+                    } else {
+                        throw new Error('Failed to get timestamp');
+                    }
+                } catch (error) {
                     console.error('Error fetching timestamp:', error);
-                    document.getElementById('file-time').textContent = 'Unable to get file time';
-                });
+                    document.getElementById('file-time').textContent = 'Error loading timestamp';
+                }
+            }
+
+            // Call it immediately
+            updateTimestamp();
         });
     </script>
 </body>
